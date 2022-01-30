@@ -26,7 +26,6 @@ class DataBaseHandler:
         query = Query.from_(history).select().limit(10)
         return self._execute(query, fetchall=True)
 
-
     def _execute(self, query: Query, fetchone=False, fetchall=False, commit=False) -> tp.Any:
         connection = sqlite3.connect(self.db_name)
         cursor = connection.cursor()

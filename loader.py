@@ -6,7 +6,8 @@ from aiogram.dispatcher import Dispatcher
 
 from data import config
 from handlers.dbhandler import DataBaseHandler
-from handlers.imdb_handler import search_by_expression_imdb
+from handlers.imdb_handler import IMDbSession, IMDbMovieInfo
+from pydantic import ValidationError
 
 
 bot = Bot(token=config.BOT_TOKEN, parse_mode=types.ParseMode.HTML)
@@ -28,12 +29,14 @@ imdb_token = config.imdb_token
 #  - Add fetching of random movie-title and information about ("I don't know what to watch!")
 
 
+
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     """
     This handler will be called when user sends `/start` or `/help` command
     """
-    greet_photo = "https://sun9-24.userapi.com/impg/cxB56z6cKXnOuhHq4kS_vomHW1OyvPKfrhoFfw/HhdCGnmWIV0.jpg?size=640x480&quality=96&sign=5f84ecb9a62e7fc3e0037de637a20379&type=album"
+    greet_photo = "https://sun9-24.userapi.com/impg/cxB56z6cKXnOuhHq4kS_vomHW1OyvPKfrhoFfw/HhdCGnmWIV0.jpg" \
+                  "?size=640x480&quality=96&sign=5f84ecb9a62e7fc3e0037de637a20379&type=album"
     await bot.send_photo(
         message.from_user.id,
         photo=greet_photo
@@ -43,7 +46,7 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(commands=["help"])
 async def helper(message: types.Message):
-    await message.reply("Привет! \nЭто хелпер для помощи в отладке!")
+    await message.reply("Hi! \nThis helper to help you with !")
 
 
 @dp.message_handler(commands=["my_id"])
@@ -54,14 +57,14 @@ async def get_user_id(message: types.Message):
 @dp.message_handler()
 async def movie_handler(message: types.Message):
     logging.info(F"message - {message.text} from {message.from_user.id}")
-    users_request = message.text
-    print('58')
-    imdb_data = await search_by_expression_imdb(imdb_token, users_request)
-    print('59')
-    imdb_result = imdb_data.results[0] if imdb_data else None
-    db.add_to_history(message.from_user.id, users_request)
+    imdb_result = await IMDbSession(imdb_token).search_by_expression_imdb(message.text)
+    print(imdb_result)
+    db.add_to_history(message.from_user.id, message.text)  # status
     if imdb_result:
-        reply = f"Title: {imdb_result.title}\nDescription: {imdb_result.description}"
+        reply = f"Title: {imdb_result.fullTitle}\n\n" \
+                f"Type: {imdb_result.type}\n\n"\
+                f"Plot: {imdb_result.plot}\n\n" \
+                f"IMDb Rating: {imdb_result.imDbRating} {int(imdb_result.imDbRating) * '⭐'}"
         await bot.send_photo(message.from_user.id,
                              imdb_result.image,
                              caption=reply)
