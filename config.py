@@ -4,5 +4,5 @@ from dotenv import load_dotenv
 
 load_dotenv()
 BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
-admins = [str(os.getenv("admin_id"))]
+admin = int(os.getenv("admin"))
 imdb_token = str(os.getenv("imdb_token"))
