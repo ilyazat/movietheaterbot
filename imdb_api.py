@@ -46,12 +46,10 @@ class IMDbSession:
                 return None
             a = await self._get_nice_description_by_imdb_id(title_id=raw_movie_info.results[0].id,
                                                          session=session)
-            print(a)
             return a
 
     async def _get_nice_description_by_imdb_id(self, title_id: str, session: aiohttp.ClientSession) -> IMDbMovieInfo:
         endpoint = imdb_url / self.language / "API" / "Title" / self._apiKey / title_id
         response = await session.get(endpoint, ssl=False)
         response_json = await response.json()
-        print(response_json)
         return IMDbMovieInfo.parse_obj(response_json)
